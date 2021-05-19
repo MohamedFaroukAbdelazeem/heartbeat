@@ -3,10 +3,12 @@ let WebSocket = require("ws");
 
 let socketAlive = null;
 let pingMessage = '{"kind":"ping"}';
+let socketTimeout = 5 * 1000;
+let port = 8000;
 
 function connect() {
-  const ws = new WebSocket("ws://localhost:8000");
-  return new Promise((resolve, reject) => {
+  const ws = new WebSocket(`ws://localhost:${port}`);
+  return new Promise((resolve) => {
     console.log("connecting...");
     ws.on("open", () => {
       setWsHeartbeat.setWsHeartbeat(ws, pingMessage, {
@@ -51,4 +53,4 @@ setInterval(() => {
   if (socketAlive == false) {
     reconnect();
   }
-}, 5000);
+}, socketTimeout);
