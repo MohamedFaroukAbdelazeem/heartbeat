@@ -8,7 +8,7 @@ let port = 8000;
 
 function connect() {
   const ws = new WebSocket(`ws://localhost:${port}`);
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     console.log("connecting...");
     ws.on("open", () => {
       setWsHeartbeat.setWsHeartbeat(ws, pingMessage, {
@@ -18,7 +18,7 @@ function connect() {
 
       console.log(`client connected to websocket server`);
       socketAlive = true;
-      resolve(socketAlive);
+      resolve({ socketAlive: socketAlive });
     });
 
     ws.on("message", (data) => {
@@ -29,20 +29,28 @@ function connect() {
       reason = reason || "unknown";
       console.log(`SOCKET_CLOSED: code ${code}, reason ${reason}`);
       socketAlive = false;
+      reject({ socketAlive: socketAlive });
     });
 
     ws.on("error", (err) => {
-      console.log(`SOCKET_ERROR: `, new Error(err.message));
+      console.log(`SOCKET_ERROR: `, err.message);
       socketAlive = false;
+      reject({ socketAlive: socketAlive });
     });
   });
 }
 
 async function reconnect() {
   try {
-    await connect();
+    await connect()
+      .then((successMsg) => {
+        console.log("Status: %o", successMsg);
+      })
+      .catch((reason) => {
+        console.log("Status: %o", reason);
+      });
   } catch (err) {
-    logger.error("SOCKET_RECONNECT: Error", new Error(err.message));
+    logger.error("SOCKET_RECONNECT: Error", err.message);
   }
 }
 
